@@ -286,6 +286,66 @@
       font-weight:800;
       color:#6c4b12;
     }
+    .game-over-overlay{
+      position:fixed;
+      inset:0;
+      z-index:999;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:rgba(36,27,15,.62);
+      backdrop-filter:blur(4px);
+    }
+    .game-over-overlay.show{
+      display:flex;
+    }
+    .game-over-box{
+      width:min(420px, 100%);
+      background:linear-gradient(180deg,#fffaf1,#f4dfb2);
+      border:2px solid rgba(111,77,30,.35);
+      border-radius:24px;
+      padding:26px 22px;
+      text-align:center;
+      box-shadow:0 24px 52px rgba(0,0,0,.28);
+      position:relative;
+      overflow:hidden;
+      animation:gameOverPop .22s ease-out;
+    }
+    .game-over-box::before{
+      content:"";
+      position:absolute;
+      inset:8px;
+      border:1px solid rgba(184,138,47,.45);
+      border-radius:17px;
+      pointer-events:none;
+    }
+    .game-over-title{
+      position:relative;
+      margin:0 0 10px;
+      font-size:clamp(24px, 6vw, 34px);
+      font-weight:900;
+      letter-spacing:.08em;
+      color:#8b0000;
+    }
+    .game-over-result{
+      position:relative;
+      margin:0 0 18px;
+      font-size:20px;
+      font-weight:900;
+      color:#3a2b16;
+      line-height:1.6;
+      white-space:pre-line;
+    }
+    .game-over-actions{
+      position:relative;
+      display:grid;
+      gap:10px;
+    }
+    @keyframes gameOverPop{
+      from{ transform:scale(.94); opacity:0; }
+      to{ transform:scale(1); opacity:1; }
+    }
     .footer-note{
       margin-top:14px;
       font-size:12px;
@@ -515,6 +575,16 @@
             ※ 二歩、行き所のない駒の打ち禁止には対応。打ち歩詰めの厳密判定は省略しています。
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameOverOverlay" class="game-over-overlay" aria-hidden="true">
+    <div class="game-over-box" role="dialog" aria-modal="true" aria-labelledby="gameOverTitle">
+      <h2 id="gameOverTitle" class="game-over-title">対局終了</h2>
+      <div id="gameOverResult" class="game-over-result"></div>
+      <div class="game-over-actions">
+        <button class="primary" id="overlayRestartBtn" type="button">もう一度対局</button>
       </div>
     </div>
   </div>
@@ -1148,6 +1218,19 @@
         ? `<div class="winner">勝敗：${state.winner === 'sente' ? '先手' : '後手'}の勝ち</div>`
         : '';
 
+      const overlay = document.getElementById('gameOverOverlay');
+      const overlayResult = document.getElementById('gameOverResult');
+      if(state.winner){
+        const winnerName = state.winner === 'sente' ? '先手' : '後手';
+        overlayResult.textContent = `${winnerName}の勝ち！\nおつかれさまでした。`;
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+      }else{
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        overlayResult.textContent = '';
+      }
+
       renderBoard();
       renderHands();
     }
@@ -1215,6 +1298,7 @@
     }
 
     document.getElementById('restartBtn').addEventListener('click', resetGame);
+    document.getElementById('overlayRestartBtn').addEventListener('click', resetGame);
     document.getElementById('cancelBtn').addEventListener('click', () => {
       clearSelection();
       if(state && !state.winner){
